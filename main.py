@@ -585,12 +585,47 @@ def main():
     parser.add_argument('-i', '--interactive', action='store_true',
                         help='Enter interactive translation mode')
     parser.add_argument('input', help='Translate input string to stdout')
+    parser.add_argument('-s', '--sequences', nargs=2, metavar=('INPUT', 'OUTPUT'),
+                        help="Translate all sentences in a file and save the translated sentences")
 
     args = parser.parse_args()
 
     # Determine device
     device = torch.device('cuda' if torch.cuda.is_available() else 'cpu')
     print(f"Using device: {device}")
+
+
+
+    if args.sequences is not None:
+        print(f"Loading model from {args.dir}")
+        translator = Translator.load(args.dir, device)
+
+        print("Enter sequences of sentences translation mode")
+
+        input_sentences, output_location = args.sequences
+
+
+
+        with open(input_sentences, 'r') as file:
+            with open(output_location,"a") as output:
+                for line in file:
+                    try:
+                        translation = translator.translate(line)
+                        output.write(translation+ "\n")
+                    except:
+                        output.write("\n")
+                output.close()
+                file.close()
+
+        with open(output_location,"r+") as output:
+            output_content = output.read()
+            output_content = output_content.rstrip('\n')
+            output.seek(0)
+
+            output.write(output_content)
+            output.truncate()
+            output.close()
+
 
     if args.train is not None:
         # Training mode
